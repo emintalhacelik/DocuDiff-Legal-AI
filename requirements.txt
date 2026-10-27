@@ -1,0 +1,8 @@
+flask
+python-dotenv
+google-genai
+flask-sqlalchemy
+flask-login
+flask-bcrypt
+pdfplumber
+gunicorn

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — DocuDiff Legal AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .playfair { font-family: 'Playfair Display', serif; }
+
+    /* Light Mode High Contrast */
+    html:not(.dark) body { background-color: #f8fafc !important; color: #0f172a !important; }
+    html:not(.dark) .card-box { background-color: #ffffff !important; border-color: #e2e8f0 !important; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06) !important; }
+    html:not(.dark) .input-box { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html:not(.dark) .input-box::placeholder { color: #94a3b8 !important; }
+    html:not(.dark) h2, html:not(.dark) #brandTitle { color: #0f172a !important; }
+    html:not(.dark) label { color: #334155 !important; }
+    html:not(.dark) p, html:not(.dark) span { color: #475569; }
+    html:not(.dark) button.bg-indigo-600 { color: #ffffff !important; }
+    html:not(.dark) #langBtn, html:not(.dark) #themeBtn { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    html:not(.dark) #navBack { color: #334155 !important; }
+  </style>
+</head>
+<body class="min-h-full transition-colors duration-200 flex flex-col justify-between px-4 py-8">
+
+  <!-- Top bar with Quick Theme & Language Toggle -->
+  <div class="max-w-md w-full mx-auto flex items-center justify-between text-xs text-slate-400 mb-6">
+    <a href="/" class="hover:text-white transition flex items-center gap-1.5" id="navBack">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      <span data-i18n="backToApp">Back to App</span>
+    </a>
+
+    <div class="flex items-center gap-3">
+      <!-- Quick Lang Toggle -->
+      <button onclick="toggleLang()" class="px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 hover:border-slate-500 transition text-slate-300 font-medium" id="langBtn">
+        TR
+      </button>
+
+      <!-- Quick Theme Toggle -->
+      <button onclick="toggleTheme()" class="p-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:border-slate-500 transition text-slate-300" id="themeBtn" title="Toggle Theme">
+        <svg class="w-4 h-4" id="themeIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="w-full max-w-md mx-auto my-auto">
+
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <a href="/" class="inline-flex items-center gap-3 justify-center">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div class="text-left">
+          <p class="playfair text-xl font-bold text-white leading-none" id="brandTitle">DocuDiff</p>
+          <p class="text-xs text-indigo-400 font-medium tracking-widest uppercase">Legal AI</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Card -->
+    <div class="card-box bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl transition">
+
+      <h2 class="text-2xl font-bold text-white mb-1" id="loginHeading" data-i18n="welcomeBack">Welcome back</h2>
+      <p class="text-slate-400 text-sm mb-7" data-i18n="loginSubtitle">Sign in to save and access your contract analyses.</p>
+
+      <!-- Success message after register -->
+      {% if registered %}
+      <div class="bg-green-900/40 border border-green-700/50 text-green-300 text-sm rounded-xl px-4 py-3 mb-5 flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span data-i18n="accountCreated">Account created successfully! You can now sign in.</span>
+      </div>
+      {% endif %}
+
+      <!-- Error -->
+      {% if error %}
+      <div class="bg-red-900/40 border border-red-700/50 text-red-300 text-sm rounded-xl px-4 py-3 mb-5 flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/login" class="space-y-5">
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5" data-i18n="emailLabel">Email Address</label>
+          <input type="email" name="email" value="{{ email or '' }}" required autocomplete="email"
+            placeholder="name@company.com"
+            class="input-box w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500
+                   focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"/>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="block text-xs font-medium text-slate-400" data-i18n="passwordLabel">Password</label>
+          </div>
+          <input type="password" name="password" required autocomplete="current-password"
+            placeholder="••••••••"
+            class="input-box w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500
+                   focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"/>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" name="remember" id="remember"
+            class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900"/>
+          <label for="remember" class="text-sm text-slate-400 cursor-pointer" data-i18n="rememberMe">Remember me</label>
+        </div>
+
+        <button type="submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl
+                 transition-all duration-150 text-sm shadow-lg shadow-indigo-900/40" data-i18n="signInBtn">
+          Sign In
+        </button>
+
+      </form>
+
+      <p class="text-center text-sm text-slate-400 mt-6">
+        <span data-i18n="noAccount">Don't have an account?</span>
+        <a href="/register" class="text-indigo-400 hover:text-indigo-300 font-medium transition ml-1" data-i18n="signUpLink">Sign up</a>
+      </p>
+
+    </div>
+
+    <p class="text-center text-xs text-slate-500 mt-6" data-i18n="disclaimer">
+      DocuDiff Legal AI — Informational risk analysis. Not formal legal advice.
+    </p>
+
+  </div>
+
+  <footer class="mt-8 text-center text-xs text-slate-500 py-3 border-t border-slate-800/60">
+    <div class="flex items-center justify-center gap-3 mb-1.5 flex-wrap">
+      <span>Powered by <strong class="text-indigo-400">Emin Talha Çelik</strong></span>
+      <span>·</span>
+      <a href="https://www.linkedin.com/in/emintalhacelik" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition flex items-center gap-1">
+        <svg class="w-3.5 h-3.5 fill-current text-[#0A66C2]" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+        LinkedIn
+      </a>
+      <span>·</span>
+      <a href="mailto:emintalhacelik@gmail.com" class="hover:text-indigo-400 transition">emintalhacelik@gmail.com</a>
+    </div>
+    <p class="text-[11px] text-slate-600">DocuDiff Legal AI &copy; 2026</p>
+  </footer>
+
+  <script>
+    const I18N = {
+      en: {
+        backToApp: "Back to App",
+        welcomeBack: "Welcome back",
+        loginSubtitle: "Sign in to save and access your contract analyses.",
+        accountCreated: "Account created successfully! You can now sign in.",
+        emailLabel: "Email Address",
+        passwordLabel: "Password",
+        rememberMe: "Remember me",
+        signInBtn: "Sign In",
+        noAccount: "Don't have an account?",
+        signUpLink: "Sign up",
+        disclaimer: "DocuDiff Legal AI — Informational risk analysis. Not formal legal advice.",
+      },
+      tr: {
+        backToApp: "Uygulamaya Dön",
+        welcomeBack: "Tekrar Hoş Geldiniz",
+        loginSubtitle: "Analizlerinizi kaydetmek ve geçmişe erişmek için giriş yapın.",
+        accountCreated: "Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.",
+        emailLabel: "E-posta Adresi",
+        passwordLabel: "Şifre",
+        rememberMe: "Beni hatırla",
+        signInBtn: "Giriş Yap",
+        noAccount: "Hesabınız yok mu?",
+        signUpLink: "Kayıt olun",
+        disclaimer: "DocuDiff Legal AI — Bilgilendirme amaçlı risk analizi. Resmi hukuki tavsiye değildir.",
+      }
+    };
+
+    let currentLang = localStorage.getItem('docudiff_lang') || 'en';
+    let currentTheme = localStorage.getItem('docudiff_theme') || 'dark';
+
+    function applyLang(lang) {
+      currentLang = lang;
+      localStorage.setItem('docudiff_lang', lang);
+      document.getElementById('langBtn').textContent = lang === 'en' ? 'TR' : 'EN';
+      const dict = I18N[lang] || I18N.en;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.textContent = dict[key];
+      });
+    }
+
+    function toggleLang() {
+      applyLang(currentLang === 'en' ? 'tr' : 'en');
+    }
+
+    function applyTheme(theme) {
+      currentTheme = theme;
+      localStorage.setItem('docudiff_theme', theme);
+      const isLight = theme === 'light';
+      if (isLight) {
+        document.documentElement.classList.remove('dark');
+        document.body.className = "min-h-full bg-slate-100 text-slate-800 transition-colors duration-200 flex flex-col justify-between px-4 py-8";
+        document.querySelectorAll('.card-box').forEach(el => {
+          el.className = "card-box bg-white border border-slate-200 rounded-2xl p-8 shadow-xl transition";
+        });
+        document.querySelectorAll('.input-box').forEach(el => {
+          el.className = "input-box w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition";
+        });
+        const brand = document.getElementById('brandTitle');
+        if (brand) brand.className = "playfair text-xl font-bold text-slate-900 leading-none";
+        const heading = document.getElementById('loginHeading');
+        if (heading) heading.className = "text-2xl font-bold text-slate-900 mb-1";
+      } else {
+        document.documentElement.classList.add('dark');
+        document.body.className = "min-h-full bg-slate-950 text-slate-100 transition-colors duration-200 flex flex-col justify-between px-4 py-8";
+        document.querySelectorAll('.card-box').forEach(el => {
+          el.className = "card-box bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl transition";
+        });
+        document.querySelectorAll('.input-box').forEach(el => {
+          el.className = "input-box w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition";
+        });
+        const brand = document.getElementById('brandTitle');
+        if (brand) brand.className = "playfair text-xl font-bold text-white leading-none";
+        const heading = document.getElementById('loginHeading');
+        if (heading) heading.className = "text-2xl font-bold text-white mb-1";
+      }
+    }
+
+    function toggleTheme() {
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    }
+
+    // Init
+    applyLang(currentLang);
+    applyTheme(currentTheme);
+  </script>
+</body>
+</html>

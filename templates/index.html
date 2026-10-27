@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocuDiff Legal AI — Contract Risk Intelligence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg-primary: #020617;
+      --bg-secondary: #0f172a;
+      --bg-tertiary: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-bg: #0f172a;
+      --input-bg: #1e293b;
+      --code-bg: #0f172a;
+    }
+
+    html.light-mode {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --code-bg: #f8fafc;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      transition: background-color .2s ease, color .2s ease;
+    }
+    .playfair { font-family: 'Playfair Display', serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Themed UI containers */
+    .theme-header { background: var(--bg-secondary); border-color: var(--border-color); }
+    .theme-sidebar { background: var(--bg-secondary); border-color: var(--border-color); }
+    .theme-card { background: var(--card-bg); border-color: var(--border-color); }
+    .theme-input { background: var(--input-bg); border-color: var(--border-color); color: var(--text-main); }
+    .theme-code { background: var(--code-bg); border-color: var(--border-color); }
+
+    /* Sidebar */
+    #sidebar { transition: width .25s ease, opacity .25s ease; }
+    #sidebar.collapsed { width: 0 !important; opacity: 0; pointer-events: none; }
+
+    /* Risk indicators */
+    .risk-high   { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+    .risk-medium { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+    .risk-low    { background: #f0fdf4; border-color: #86efac; color: #166534; }
+
+    html.dark .risk-high   { background: rgba(153, 27, 27, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #fecaca; }
+    html.dark .risk-medium { background: rgba(146, 64, 14, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #fde68a; }
+    html.dark .risk-low    { background: rgba(22, 101, 52, 0.2); border-color: rgba(34, 197, 94, 0.5); color: #bbf7d0; }
+
+    .badge-high   { background: #dc2626; color: #ffffff; }
+    .badge-medium { background: #d97706; color: #ffffff; }
+    .badge-low    { background: #16a34a; color: #ffffff; }
+
+    .dot-high   { background: #dc2626; }
+    .dot-medium { background: #d97706; }
+    .dot-low    { background: #16a34a; }
+
+    /* Animations */
+    .score-bar-fill { transition: width 0.9s cubic-bezier(.4,0,.2,1); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp .35s ease both; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 1s linear infinite; }
+
+    /* Dropzone */
+    .dropzone-active { border-color: #6366f1 !important; background: rgba(99, 102, 241, 0.1) !important; }
+
+    /* Sidebar history items */
+    .hist-item { transition: background .15s ease, border-color .15s ease; }
+    .hist-item:hover { background: rgba(99, 102, 241, 0.08); }
+    .hist-item.active { background: rgba(99, 102, 241, 0.16); border-left: 3px solid #6366f1; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 9999px; }
+
+    .copy-btn { transition: all .15s; }
+    .copy-btn.copied { background: #10b981 !important; color: #ffffff !important; border-color: #10b981 !important; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       LIGHT MODE HIGH-CONTRAST READABILITY ENGINE
+       ═══════════════════════════════════════════════════════════════════ */
+    html.light-mode body {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+    }
+
+    /* Headings & Brand text */
+    html.light-mode h1,
+    html.light-mode h2,
+    html.light-mode h3,
+    html.light-mode h4,
+    html.light-mode #heroHeading,
+    html.light-mode #headerBrand,
+    html.light-mode #modalHeading {
+      color: #0f172a !important;
+    }
+
+    /* Text color overrides for high readability */
+    html.light-mode .text-white { color: #0f172a !important; }
+    html.light-mode .text-slate-100 { color: #0f172a !important; }
+    html.light-mode .text-slate-200 { color: #1e293b !important; }
+    html.light-mode .text-slate-300 { color: #334155 !important; }
+    html.light-mode .text-slate-400 { color: #475569 !important; }
+    html.light-mode .text-slate-500 { color: #475569 !important; }
+    html.light-mode .text-slate-600 { color: #64748b !important; }
+
+    /* Accent colors adjusted for light backgrounds */
+    html.light-mode .text-indigo-400 { color: #4f46e5 !important; }
+    html.light-mode .text-indigo-300 { color: #4338ca !important; }
+    html.light-mode .text-indigo-200 { color: #3730a3 !important; }
+    html.light-mode .text-blue-400 { color: #1d4ed8 !important; }
+    html.light-mode .text-amber-400 { color: #b45309 !important; }
+    html.light-mode .text-emerald-400 { color: #047857 !important; }
+    html.light-mode .text-red-400 { color: #b91c1c !important; }
+
+    /* Solid buttons & badges must retain crisp white text */
+    html.light-mode button.bg-indigo-600,
+    html.light-mode button.bg-indigo-600 *,
+    html.light-mode a.bg-indigo-600,
+    html.light-mode a.bg-indigo-600 *,
+    html.light-mode .badge-high,
+    html.light-mode .badge-medium,
+    html.light-mode .badge-low,
+    html.light-mode #copyBtn.copied,
+    html.light-mode #copyBtn.copied * {
+      color: #ffffff !important;
+    }
+
+    /* Themed containers */
+    html.light-mode .theme-header {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    html.light-mode .theme-sidebar {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+    html.light-mode .theme-card {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.06), 0 1px 4px -1px rgba(0, 0, 0, 0.04) !important;
+    }
+    html.light-mode .theme-input {
+      background: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light-mode .theme-input::placeholder {
+      color: #94a3b8 !important;
+    }
+    html.light-mode .theme-code {
+      background: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    html.light-mode .theme-code p,
+    html.light-mode #r_revision {
+      color: #0f172a !important;
+    }
+
+    /* Dropzone */
+    html.light-mode #dropzone {
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light-mode #dropzone:hover {
+      background: #f5f3ff !important;
+      border-color: #6366f1 !important;
+    }
+
+    /* Neutral badges and pills */
+    html.light-mode .bg-slate-800 {
+      background-color: #f1f5f9 !important;
+      color: #334155 !important;
+      border-color: #e2e8f0 !important;
+    }
+    html.light-mode .bg-slate-900\/40,
+    html.light-mode .bg-slate-900\/60 {
+      background-color: #e2e8f0 !important;
+    }
+    html.light-mode .bg-indigo-950\/70 {
+      background-color: #eef2ff !important;
+      border-color: #c7d2fe !important;
+      color: #3730a3 !important;
+    }
+    html.light-mode .bg-indigo-950\/70 span {
+      color: #3730a3 !important;
+    }
+    html.light-mode .bg-indigo-950\/60 {
+      background-color: #eef2ff !important;
+      border-color: #c7d2fe !important;
+    }
+    html.light-mode .bg-indigo-500\/10 {
+      background-color: #eef2ff !important;
+      border-color: #c7d2fe !important;
+      color: #4338ca !important;
+    }
+    html.light-mode .bg-indigo-500\/20 {
+      background-color: #e0e7ff !important;
+      color: #4338ca !important;
+    }
+
+    /* Sidebar history items */
+    html.light-mode .hist-item {
+      color: #1e293b !important;
+    }
+    html.light-mode .hist-item p {
+      color: #1e293b !important;
+    }
+    html.light-mode .hist-item:hover {
+      background: #f1f5f9 !important;
+    }
+    html.light-mode .hist-item.active {
+      background: #eef2ff !important;
+      border-left: 3px solid #6366f1 !important;
+    }
+    html.light-mode .hist-item.active p {
+      color: #4338ca !important;
+    }
+
+    /* Settings modal */
+    html.light-mode #settingsModal {
+      background-color: rgba(15, 23, 42, 0.4) !important;
+    }
+    html.light-mode #settingsModal .theme-card {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+    html.light-mode #settingsModal button {
+      border-color: #e2e8f0;
+      color: #0f172a;
+    }
+    html.light-mode #settingsModal button p,
+    html.light-mode #settingsModal button span {
+      color: #0f172a;
+    }
+    html.light-mode #settingsModal button:hover {
+      background-color: #f8fafc;
+    }
+    html.light-mode #settingsModal button.border-indigo-500 {
+      border-color: #6366f1 !important;
+      background-color: #eef2ff !important;
+    }
+    html.light-mode #settingsModal button.border-indigo-500 span,
+    html.light-mode #settingsModal button.border-indigo-500 p {
+      color: #4338ca !important;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+<!-- ═══════════════════════════  HEADER  ══════════════════════════════════ -->
+<header class="theme-header flex-shrink-0 border-b backdrop-blur z-40 transition-colors">
+  <div class="px-4 py-3 flex items-center justify-between gap-4">
+
+    <!-- Left: Brand + Toggle -->
+    <div class="flex items-center gap-3">
+      {% if current_user.is_authenticated %}
+      <button id="sidebarToggle" class="p-2 rounded-xl hover:bg-slate-800/50 transition text-slate-400 hover:text-indigo-400" title="Toggle History Sidebar">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      {% endif %}
+
+      <a href="/" class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 flex-shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="playfair text-lg font-bold tracking-tight leading-none" id="headerBrand">DocuDiff</p>
+          <p class="text-[10px] text-indigo-400 font-semibold tracking-widest uppercase">Legal AI</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Center/Right: Actions + Settings Modal Trigger + User Auth -->
+    <div class="flex items-center gap-2 sm:gap-3">
+
+      <!-- Settings Button -->
+      <button id="openSettingsBtn" onclick="openSettings()" class="theme-card flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-xl border hover:border-indigo-500 transition shadow-sm" title="Configure App Settings">
+        <svg class="w-4 h-4 text-indigo-400 animate-spin-hover" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span class="hidden sm:inline" data-i18n="settingsTitle">Settings</span>
+        <span id="activeLangBadge" class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400">EN</span>
+      </button>
+
+      <!-- Auth menu -->
+      {% if current_user.is_authenticated %}
+        <div class="flex items-center gap-2 theme-card border px-3 py-1.5 rounded-xl">
+          <div class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white">
+            {{ current_user.username[0].upper() }}
+          </div>
+          <span class="text-xs font-medium truncate max-w-[100px] hidden md:inline">{{ current_user.username }}</span>
+        </div>
+        <a href="/logout" class="text-xs text-slate-400 hover:text-red-400 px-2.5 py-1.5 rounded-xl hover:bg-slate-800/40 transition" data-i18n="signOutBtn">Sign Out</a>
+      {% else %}
+        <a href="/login" class="text-xs font-medium text-slate-400 hover:text-indigo-400 px-3 py-2 rounded-xl transition" data-i18n="signInBtn">Sign In</a>
+        <a href="/register" class="text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl transition shadow-md shadow-indigo-600/30" data-i18n="signUpBtn">Sign Up</a>
+      {% endif %}
+    </div>
+
+  </div>
+</header>
+
+<!-- ═══════════════════════════  BODY WRAPPER  ════════════════════════════ -->
+<div class="flex flex-1 overflow-hidden">
+
+  <!-- ─────────────────────────  SIDEBAR  ────────────────────────────── -->
+  {% if current_user.is_authenticated %}
+  <aside id="sidebar" class="theme-sidebar w-72 flex-shrink-0 border-r flex flex-col overflow-hidden transition-all duration-200">
+
+    <div class="px-4 py-3.5 border-b flex items-center justify-between" style="border-color: var(--border-color);">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400" data-i18n="reviewHistory">Analysis History</span>
+      </div>
+      <span id="histCount" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">0</span>
+    </div>
+
+    <div id="historyList" class="flex-1 overflow-y-auto py-2 space-y-1 px-2">
+      <!-- empty state in sidebar -->
+      <div id="histEmpty" class="text-center py-12 px-4 hidden">
+        <div class="w-10 h-10 rounded-full bg-slate-800/50 flex items-center justify-center mx-auto mb-2 text-slate-500">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <p class="text-slate-400 text-xs font-medium" data-i18n="noAnalysesYet">No analyses yet.</p>
+        <p class="text-slate-500 text-[11px] mt-0.5" data-i18n="runFirstAnalysis">Analyze a clause to save it here.</p>
+      </div>
+    </div>
+
+  </aside>
+  {% endif %}
+
+  <!-- ─────────────────────────  MAIN VIEWPORT  ──────────────────────── -->
+  <main class="flex-1 overflow-y-auto">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Hero Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 bg-indigo-950/70 border border-indigo-700/40 text-indigo-300 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 uppercase tracking-wider shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span data-i18n="badgeHero">AI Commercial Contract Risk Engine</span>
+        </div>
+        <h1 class="playfair text-3xl sm:text-5xl font-bold tracking-tight mb-3 leading-tight" id="heroHeading">
+          Spot Hidden Contract Risks<br class="hidden sm:block"/> Before You Sign
+        </h1>
+        <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed" data-i18n="heroSubtitle">
+          Paste a legal clause or upload a PDF agreement. Receive instant risk scoring, plain-English executive explanations, and balanced redlines.
+        </p>
+      </div>
+
+      <!-- 2-Column Core Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+        <!-- ──────── INPUT PANEL ──────── -->
+        <div class="theme-card border rounded-2xl p-6 shadow-xl transition-colors">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400" data-i18n="clauseInputHeader">Clause Input</h2>
+            <div id="stanceBadge" class="text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
+              Balanced Review
+            </div>
+          </div>
+
+          <!-- PDF Upload Zone -->
+          <div id="dropzone"
+            class="border-2 border-dashed rounded-xl p-5 mb-5 text-center cursor-pointer transition relative group"
+            style="border-color: var(--border-color); background: rgba(99, 102, 241, 0.03);"
+            onclick="document.getElementById('pdfInput').click()"
+            ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            <input type="file" id="pdfInput" accept=".pdf" class="hidden" onchange="handlePdf(this.files[0])"/>
+            
+            <div id="dropContent">
+              <div class="w-10 h-10 rounded-full bg-indigo-600/10 text-indigo-400 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-slate-200" data-i18n="uploadPdfTitle">Upload PDF Agreement</p>
+              <p class="text-xs text-slate-400 mt-0.5" data-i18n="uploadPdfSub">Drag and drop or click to browse · Up to 16 MB</p>
+            </div>
+
+            <!-- Upload loader overlay -->
+            <div id="dropLoading" class="hidden absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur rounded-xl">
+              <div class="flex items-center gap-2.5 text-indigo-300 font-medium text-xs">
+                <div class="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full spinner"></div>
+                <span data-i18n="readingPdf">Parsing PDF text…</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Uploaded file tag -->
+          <div id="pdfBar" class="hidden mb-4 theme-card border rounded-xl px-4 py-2.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              <span id="pdfName" class="text-xs font-medium truncate"></span>
+            </div>
+            <button onclick="clearPdf()" class="text-xs text-slate-400 hover:text-red-400 transition flex-shrink-0 font-medium" data-i18n="clearBtn">✕ Clear</button>
+          </div>
+
+          <form id="analyzeForm" class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1.5" data-i18n="clauseIdLabel">Clause ID</label>
+                <input id="clauseId" type="text" value="Clause_1" placeholder="e.g. Section_8.2"
+                  class="theme-input w-full border rounded-xl px-3.5 py-2.5 text-xs font-mono focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"/>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1.5" data-i18n="clauseTitleLabel">Clause Title</label>
+                <input id="clauseTitle" type="text" placeholder="e.g. Termination Rights"
+                  class="theme-input w-full border rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"/>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">
+                <span data-i18n="clauseTextLabel">Clause Text</span> <span class="text-indigo-400">*</span>
+              </label>
+              <textarea id="clauseText" rows="10" placeholder="Paste the legal clause text here to analyze for liabilities, indemnifications, or unfair terms…"
+                class="theme-input w-full border rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition leading-relaxed"></textarea>
+              <p class="text-[11px] text-slate-500 mt-1" data-i18n="clauseCharMin">Minimum 20 characters required.</p>
+            </div>
+
+            <button id="analyzeBtn" type="submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl
+                     transition-all duration-150 flex items-center justify-center gap-2 text-sm shadow-lg shadow-indigo-600/30">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.347a3.375 3.375 0 01-4.971 0l-.31-.34"/>
+              </svg>
+              <span data-i18n="analyzeBtn">Analyze Clause</span>
+            </button>
+          </form>
+
+          <!-- Quick Sample Loader -->
+          <div class="mt-4 pt-4 border-t flex items-center justify-between flex-wrap gap-2" style="border-color: var(--border-color);">
+            <span class="text-xs text-slate-400" data-i18n="loadSamplePrompt">Quick Sample:</span>
+            <button id="loadExample"
+              class="text-xs text-indigo-400 hover:text-indigo-300 font-medium theme-card px-3 py-1.5 rounded-lg border hover:border-indigo-500 transition">
+              Termination &amp; Auto-Renewal Sample
+            </button>
+          </div>
+        </div>
+
+        <!-- ──────── RESULTS PANEL ──────── -->
+        <div id="resultsPanel" class="space-y-4">
+
+          <!-- Empty State -->
+          <div id="emptyState" class="theme-card border-2 border-dashed rounded-2xl p-12 text-center transition-colors">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center mx-auto mb-3">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-300 mb-1" data-i18n="awaitingAnalysisTitle">Awaiting Contract Clause</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto" data-i18n="awaitingAnalysisSub">Paste a clause on the left or upload a PDF agreement and click "Analyze Clause" to assess risk severity and receive redlines.</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loadingState" class="hidden theme-card border rounded-2xl p-12 text-center">
+            <div class="w-10 h-10 border-4 border-indigo-400/20 border-t-indigo-500 rounded-full spinner mx-auto mb-4"></div>
+            <h3 class="text-sm font-semibold text-slate-200 mb-1" data-i18n="analyzingTitle">Analyzing Contract Terms…</h3>
+            <p class="text-xs text-slate-400" data-i18n="analyzingSub">Gemini Legal AI is parsing liabilities, assessing risk score, and drafting balanced revisions.</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="errorState" class="hidden theme-card border border-red-500/40 rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h4 class="text-sm font-bold text-red-400 mb-1" data-i18n="analysisFailedTitle">Analysis Could Not Complete</h4>
+                <p id="errorMsg" class="text-xs text-slate-300 leading-relaxed"></p>
+                <button id="retryBtn" class="mt-3 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-1.5 rounded-lg transition" data-i18n="retryBtn">↺ Try Again</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auth Banner (Prompt to sign in and save) -->
+          <div id="authBanner" class="hidden bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-5 flex items-start gap-4">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600/20 text-indigo-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-indigo-200 font-semibold text-sm mb-1" data-i18n="authBannerTitle">Save This Review</h4>
+              <p class="text-indigo-300/80 text-xs leading-relaxed mb-3" data-i18n="authBannerSub">Create a free account or sign in to save this analysis and build your contract risk history.</p>
+              <div class="flex items-center gap-2">
+                <a href="/login" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg transition font-medium" data-i18n="signInBtn">Sign In</a>
+                <a href="/register" class="text-xs theme-card hover:bg-slate-800 text-slate-300 border px-3.5 py-1.5 rounded-lg transition font-medium" data-i18n="signUpBtn">Sign Up</a>
+                <button onclick="document.getElementById('authBanner').classList.add('hidden')" class="text-xs text-slate-400 hover:text-slate-200 ml-auto">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Card -->
+          <div id="resultsCard" class="hidden fade-up space-y-4">
+
+            <!-- Risk Header Block -->
+            <div id="riskHeader" class="rounded-2xl border-2 p-5 transition-colors">
+              <div class="flex items-start justify-between flex-wrap gap-3 mb-4">
+                <div>
+                  <p id="r_clauseId" class="text-xs font-semibold mono mb-0.5"></p>
+                  <h3 id="r_keyIssue" class="text-base font-bold leading-snug"></h3>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                  <span id="r_riskBadge" class="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"></span>
+                  <span id="r_categoryBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800 text-slate-200 border border-slate-700 uppercase tracking-wider"></span>
+                </div>
+              </div>
+
+              <!-- Score Bar -->
+              <div>
+                <div class="flex justify-between text-xs font-medium text-slate-400 mb-1">
+                  <span data-i18n="riskScoreLabel">Risk Score</span>
+                  <span id="r_scoreLabel" class="font-bold"></span>
+                </div>
+                <div class="w-full bg-slate-900/40 rounded-full h-2 overflow-hidden">
+                  <div id="r_scoreBar" class="score-bar-fill h-2 rounded-full w-0"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plain English Summary -->
+            <div class="theme-card border rounded-2xl p-5 shadow-sm transition-colors">
+              <div class="flex items-center gap-2 mb-2.5">
+                <div class="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400" data-i18n="plainEnglishHeader">Plain English Explanation</h4>
+              </div>
+              <p id="r_plainEnglish" class="text-sm text-slate-300 leading-relaxed"></p>
+            </div>
+
+            <!-- Actionable Advice -->
+            <div class="theme-card border rounded-2xl p-5 shadow-sm transition-colors">
+              <div class="flex items-center gap-2 mb-2.5">
+                <div class="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400" data-i18n="actionableAdviceHeader">Actionable Advice</h4>
+              </div>
+              <p id="r_advice" class="text-sm text-slate-300 leading-relaxed"></p>
+            </div>
+
+            <!-- Suggested Redline / Revision -->
+            <div class="theme-card border rounded-2xl p-5 shadow-sm transition-colors">
+              <div class="flex items-center justify-between mb-2.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </div>
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400" data-i18n="suggestedRevisionHeader">Suggested Redline Revision</h4>
+                </div>
+                <button id="copyBtn" class="copy-btn text-xs text-indigo-400 font-semibold px-3 py-1.5 rounded-lg border border-indigo-500/30 flex items-center gap-1.5 hover:bg-indigo-500/10 transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                  <span id="copyBtnText" data-i18n="copyBtn">Copy Revision</span>
+                </button>
+              </div>
+              <div class="theme-code rounded-xl p-4 border overflow-x-auto">
+                <p id="r_revision" class="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-wrap mono"></p>
+              </div>
+            </div>
+
+          </div><!-- /results card -->
+        </div><!-- /results panel -->
+
+      </div><!-- /grid -->
+
+      <!-- ═══════════════ FOOTER & DEVELOPER BRANDING ═══════════════ -->
+      <footer class="mt-16 pt-8 pb-4 border-t transition-colors" style="border-color: var(--border-color);">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+          
+          <!-- Left: Powered by Emin Talha Celik -->
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs">
+              EC
+            </div>
+            <div>
+              <p class="font-semibold text-slate-300">
+                <span data-i18n="poweredBy">Powered by</span>
+                <span class="text-indigo-400 font-bold ml-0.5">Emin Talha Çelik</span>
+              </p>
+              <p class="text-[11px] text-slate-500">Full-Stack AI &amp; Software Engineer</p>
+            </div>
+          </div>
+
+          <!-- Center: Social & Contact Links -->
+          <div class="flex items-center gap-3">
+            <!-- LinkedIn -->
+            <a href="https://www.linkedin.com/in/emintalhacelik" target="_blank" rel="noopener noreferrer"
+               class="theme-card flex items-center gap-1.5 px-3 py-1.5 rounded-lg border hover:border-indigo-500 hover:text-indigo-400 transition text-slate-300 font-medium shadow-sm">
+              <svg class="w-3.5 h-3.5 fill-current text-[#0A66C2]" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+
+            <!-- Email Direct Mail -->
+            <a href="mailto:emintalhacelik@gmail.com"
+               class="theme-card flex items-center gap-1.5 px-3 py-1.5 rounded-lg border hover:border-indigo-500 hover:text-indigo-400 transition text-slate-300 font-medium shadow-sm">
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              <span>emintalhacelik@gmail.com</span>
+            </a>
+
+            <!-- Copy Email Button -->
+            <button onclick="copyEmail()" id="copyEmailBtn" class="p-1.5 rounded-lg theme-card border hover:border-indigo-500 transition text-slate-400 hover:text-white" title="Copy Email">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Right: System badge & version -->
+          <div class="flex items-center gap-2 text-slate-500">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[11px]" data-i18n="allSystemsLive">AI Engine Operational</span>
+            <span class="text-slate-600">·</span>
+            <span class="text-[11px] font-mono">v2.5</span>
+          </div>
+
+        </div>
+
+        <!-- Sub disclaimer -->
+        <p class="text-center text-[11px] text-slate-500 mt-5 leading-relaxed max-w-2xl mx-auto" data-i18n="legalDisclaimerFooter">
+          DocuDiff Legal AI provides automated commercial contract risk screening and drafting assistance. It does not constitute formal legal representation or attorney-client privilege.
+        </p>
+      </footer>
+
+    </div><!-- /max-w -->
+  </main>
+</div><!-- /flex wrapper -->
+
+<!-- ═══════════════════════════  SETTINGS MODAL  ══════════════════════════ -->
+<div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm fade-up">
+  <div class="theme-card border rounded-2xl max-w-lg w-full p-6 shadow-2xl relative overflow-hidden" onclick="event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between pb-4 border-b" style="border-color: var(--border-color);">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white" id="modalHeading" data-i18n="settingsModalHeading">Preferences &amp; Customization</h3>
+          <p class="text-xs text-slate-400" data-i18n="settingsModalSub">Configure language, theme, and legal analysis behavior.</p>
+        </div>
+      </div>
+      <button onclick="closeSettings()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">✕</button>
+    </div>
+
+    <!-- Modal Form Body -->
+    <div class="py-5 space-y-5 text-sm">
+
+      <!-- 1. Language -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2" data-i18n="languageSettingLabel">Interface Language</label>
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" onclick="setLang('en')" id="langOpt_en" class="flex items-center justify-center gap-2 p-3 rounded-xl border font-semibold text-xs transition">
+            <span>🇺🇸 English (Default)</span>
+          </button>
+          <button type="button" onclick="setLang('tr')" id="langOpt_tr" class="flex items-center justify-center gap-2 p-3 rounded-xl border font-semibold text-xs transition">
+            <span>🇹🇷 Türkçe</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Theme Mode -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2" data-i18n="themeSettingLabel">Appearance Theme</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="setTheme('dark')" id="themeOpt_dark" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border font-semibold text-xs transition">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <span data-i18n="themeDark">Dark</span>
+          </button>
+          <button type="button" onclick="setTheme('light')" id="themeOpt_light" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border font-semibold text-xs transition">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <span data-i18n="themeLight">Light</span>
+          </button>
+          <button type="button" onclick="setTheme('auto')" id="themeOpt_auto" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border font-semibold text-xs transition">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span data-i18n="themeAuto">System</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Reviewer Stance (Legal Perspective) -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2" data-i18n="stanceSettingLabel">Reviewer Perspective</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="setStance('balanced')" id="stanceOpt_balanced" class="p-2.5 rounded-xl border text-left transition">
+            <p class="text-xs font-bold text-white mb-0.5" data-i18n="stanceBalanced">Balanced</p>
+            <p class="text-[10px] text-slate-400 leading-tight" data-i18n="stanceBalancedSub">Neutral corporate counsel.</p>
+          </button>
+          <button type="button" onclick="setStance('buyer')" id="stanceOpt_buyer" class="p-2.5 rounded-xl border text-left transition">
+            <p class="text-xs font-bold text-white mb-0.5" data-i18n="stanceBuyer">Buyer/Client</p>
+            <p class="text-[10px] text-slate-400 leading-tight" data-i18n="stanceBuyerSub">Defend customer against harsh vendor clauses.</p>
+          </button>
+          <button type="button" onclick="setStance('vendor')" id="stanceOpt_vendor" class="p-2.5 rounded-xl border text-left transition">
+            <p class="text-xs font-bold text-white mb-0.5" data-i18n="stanceVendor">Vendor/Supplier</p>
+            <p class="text-[10px] text-slate-400 leading-tight" data-i18n="stanceVendorSub">Protect provider IP and payment schedules.</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. Text Size & Auto-Copy Preferences -->
+      <div class="grid grid-cols-2 gap-3 pt-2 border-t" style="border-color: var(--border-color);">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1" data-i18n="editorSizeLabel">Editor Text Size</label>
+          <select id="fontSizeSelect" onchange="setFontSize(this.value)" class="theme-input w-full border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+            <option value="text-xs">Compact (Small)</option>
+            <option value="text-sm" selected>Standard (Medium)</option>
+            <option value="text-base">Comfort (Large)</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 pt-5">
+          <input type="checkbox" id="autoCopyCheck" onchange="setAutoCopy(this.checked)" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500"/>
+          <label for="autoCopyCheck" class="text-xs text-slate-300 cursor-pointer" data-i18n="autoCopyLabel">Auto-copy revision</label>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="pt-4 border-t flex justify-end" style="border-color: var(--border-color);">
+      <button onclick="closeSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition" data-i18n="doneBtn">
+        Done
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════  JAVASCRIPT  ═════════════════════════════ -->
+<script>
+// ── Server data ────────────────────────────────────────────────────────────
+const IS_AUTH = {{ 'true' if current_user.is_authenticated else 'false' }};
+let HISTORY   = {{ history | tojson }};
+
+// Sample clause
+const SAMPLE_CLAUSE = {
+  id:    "Clause_1",
+  title: "Termination for Convenience & Auto-Renewal",
+  text:  `This Agreement shall automatically renew for successive one-year terms unless either party provides written notice of non-renewal at least ninety (90) days prior to the expiration of the current term. Company reserves the right to terminate this Agreement at any time without cause upon ten (10) days written notice, whereas Client may only terminate for cause upon thirty (30) days notice and after providing a sixty (60) day cure period.`
+};
+
+// ── Multi-Language Dictionary ──────────────────────────────────────────────
+const I18N = {
+  en: {
+    settingsTitle: "Settings",
+    signInBtn: "Sign In",
+    signUpBtn: "Sign Up",
+    signOutBtn: "Sign Out",
+    reviewHistory: "Analysis History",
+    noAnalysesYet: "No analyses yet.",
+    runFirstAnalysis: "Analyze a clause to save it here.",
+    badgeHero: "AI Commercial Contract Risk Engine",
+    heroHeading: "Spot Hidden Contract Risks<br class=\"hidden sm:block\"/> Before You Sign",
+    heroSubtitle: "Paste a legal clause or upload a PDF agreement. Receive instant risk scoring, plain-English executive explanations, and balanced redlines.",
+    clauseInputHeader: "Clause Input",
+    uploadPdfTitle: "Upload PDF Agreement",
+    uploadPdfSub: "Drag and drop or click to browse · Up to 16 MB",
+    readingPdf: "Parsing PDF text…",
+    clearBtn: "✕ Clear",
+    clauseIdLabel: "Clause ID",
+    clauseTitleLabel: "Clause Title",
+    clauseTextLabel: "Clause Text",
+    clauseCharMin: "Minimum 20 characters required.",
+    analyzeBtn: "Analyze Clause",
+    loadSamplePrompt: "Quick Sample:",
+    awaitingAnalysisTitle: "Awaiting Contract Clause",
+    awaitingAnalysisSub: "Paste a clause on the left or upload a PDF agreement and click 'Analyze Clause' to assess risk severity and receive redlines.",
+    analyzingTitle: "Analyzing Contract Terms…",
+    analyzingSub: "Gemini Legal AI is parsing liabilities, assessing risk score, and drafting balanced revisions.",
+    analysisFailedTitle: "Analysis Could Not Complete",
+    retryBtn: "↺ Try Again",
+    authBannerTitle: "Save This Review",
+    authBannerSub: "Create a free account or sign in to save this analysis and build your contract risk history.",
+    riskScoreLabel: "Risk Score",
+    plainEnglishHeader: "Plain English Explanation",
+    actionableAdviceHeader: "Actionable Advice",
+    suggestedRevisionHeader: "Suggested Redline Revision",
+    copyBtn: "Copy Revision",
+    copiedBtn: "✓ Copied!",
+    settingsModalHeading: "Preferences & Customization",
+    settingsModalSub: "Configure language, theme, and legal analysis behavior.",
+    languageSettingLabel: "Interface Language",
+    themeSettingLabel: "Appearance Theme",
+    themeDark: "Dark",
+    themeLight: "Light",
+    themeAuto: "System",
+    stanceSettingLabel: "Reviewer Perspective",
+    stanceBalanced: "Balanced",
+    stanceBalancedSub: "Neutral corporate counsel.",
+    stanceBuyer: "Buyer/Client",
+    stanceBuyerSub: "Defend customer against harsh terms.",
+    stanceVendor: "Vendor/Supplier",
+    stanceVendorSub: "Protect provider IP and payment.",
+    editorSizeLabel: "Editor Text Size",
+    autoCopyLabel: "Auto-copy revision",
+    doneBtn: "Done",
+    emptyPdfError: "PDF appears to be empty or image-only (no extractable text).",
+    networkError: "Network connection error. Please verify your connection.",
+    justNow: "Just now",
+    poweredBy: "Powered by",
+    allSystemsLive: "AI Engine Operational",
+    legalDisclaimerFooter: "DocuDiff Legal AI provides automated commercial contract risk screening and drafting assistance. It does not constitute formal legal representation or attorney-client privilege.",
+  },
+  tr: {
+    settingsTitle: "Ayarlar",
+    signInBtn: "Giriş Yap",
+    signUpBtn: "Kayıt Ol",
+    signOutBtn: "Çıkış Yap",
+    reviewHistory: "Analiz Geçmişi",
+    noAnalysesYet: "Henüz analiz yok.",
+    runFirstAnalysis: "Analiz ettiğiniz maddeler burada listelenir.",
+    badgeHero: "Yapay Zeka Sözleşme Risk Motoru",
+    heroHeading: "İmzalamadan Önce<br class=\"hidden sm:block\"/> Riskleri Tespit Edin",
+    heroSubtitle: "Sözleşme maddesini yapıştırın veya PDF yükleyin. Anında risk puanı, yönetici seviyesinde sade açıklama ve dengeli revizyon alın.",
+    clauseInputHeader: "Madde Girişi",
+    uploadPdfTitle: "PDF Sözleşme Yükle",
+    uploadPdfSub: "Sürükleyip bırakın veya seçin · Maks 16 MB",
+    readingPdf: "PDF metni okunuyor…",
+    clearBtn: "✕ Temizle",
+    clauseIdLabel: "Madde ID",
+    clauseTitleLabel: "Madde Başlığı",
+    clauseTextLabel: "Madde Metni",
+    clauseCharMin: "En az 20 karakter gereklidir.",
+    analyzeBtn: "Analiz Et",
+    loadSamplePrompt: "Örnek Madde:",
+    awaitingAnalysisTitle: "Sözleşme Maddesi Bekleniyor",
+    awaitingAnalysisSub: "Sol tarafa bir madde yapıştırın veya PDF yükleyip 'Analiz Et' butonuna basarak riskleri görüntüleyin.",
+    analyzingTitle: "Sözleşme Analiz Ediliyor…",
+    analyzingSub: "Gemini Legal AI riskleri inceliyor, sorumlulukları hesaplıyor ve alternatif revizyon hazırlıyor.",
+    analysisFailedTitle: "Analiz Tamamlanamadı",
+    retryBtn: "↺ Tekrar Dene",
+    authBannerTitle: "Bu Analizi Kaydedin",
+    authBannerSub: "Ücretsiz hesap oluşturarak veya giriş yaparak bu analizi kaydedebilir ve geçmişinize erişebilirsiniz.",
+    riskScoreLabel: "Risk Skoru",
+    plainEnglishHeader: "Sade Dille Açıklama",
+    actionableAdviceHeader: "Yapılması Gerekenler",
+    suggestedRevisionHeader: "Önerilen Hukuki Revizyon",
+    copyBtn: "Revizyonu Kopyala",
+    copiedBtn: "✓ Kopyalandı!",
+    settingsModalHeading: "Tercihler ve Ayarlar",
+    settingsModalSub: "Dil, tema ve hukuki analiz tercihlerini yapılandırın.",
+    languageSettingLabel: "Arayüz Dili",
+    themeSettingLabel: "Görünüm Teması",
+    themeDark: "Koyu",
+    themeLight: "Açık",
+    themeAuto: "Sistem",
+    stanceSettingLabel: "İnceleme Perspektifi",
+    stanceBalanced: "Dengeli",
+    stanceBalancedSub: "Tarafsız hukuk müşaviri.",
+    stanceBuyer: "Alıcı / Müşteri",
+    stanceBuyerSub: "Müşteriyi ağır koşullara karşı koru.",
+    stanceVendor: "Satıcı / Sağlayıcı",
+    stanceVendorSub: "Hizmet sağlayıcı telif ve tahsilatını koru.",
+    editorSizeLabel: "Metin Yazı Boyutu",
+    autoCopyLabel: "Revizyonu otomatik kopyala",
+    doneBtn: "Tamam",
+    emptyPdfError: "PDF boş veya taranmış resim (metin çıkarılamadı).",
+    networkError: "Ağ bağlantı hatası. Lütfen internetinizi kontrol edin.",
+    justNow: "Az önce",
+    poweredBy: "Geliştirici:",
+    allSystemsLive: "Yapay Zeka Motoru Aktif",
+    legalDisclaimerFooter: "DocuDiff Legal AI otomatik sözleşme risk analizi ve taslak hazırlama sağlar; resmi hukuki temsil veya tavsiye niteliğinde değildir.",
+  }
+};
+
+// ── Preferences State ──────────────────────────────────────────────────────
+let currentLang     = localStorage.getItem('docudiff_lang')     || 'en';
+let currentTheme    = localStorage.getItem('docudiff_theme')    || 'dark';
+let currentStance   = localStorage.getItem('docudiff_stance')   || 'balanced';
+let currentFontSize = localStorage.getItem('docudiff_fontsize') || 'text-sm';
+let currentAutoCopy = localStorage.getItem('docudiff_autocopy') === 'true';
+
+// ── DOM Elements ───────────────────────────────────────────────────────────
+const form          = document.getElementById('analyzeForm');
+const clauseIdEl    = document.getElementById('clauseId');
+const clauseTitleEl = document.getElementById('clauseTitle');
+const clauseTextEl  = document.getElementById('clauseText');
+const analyzeBtn    = document.getElementById('analyzeBtn');
+const emptyState    = document.getElementById('emptyState');
+const loadingState  = document.getElementById('loadingState');
+const errorState    = document.getElementById('errorState');
+const errorMsg      = document.getElementById('errorMsg');
+const resultsCard   = document.getElementById('resultsCard');
+const authBanner    = document.getElementById('authBanner');
+const historyList   = document.getElementById('historyList');
+const histEmpty     = document.getElementById('histEmpty');
+const histCount     = document.getElementById('histCount');
+const settingsModal = document.getElementById('settingsModal');
+
+// ── Theme Engine ───────────────────────────────────────────────────────────
+function setTheme(theme) {
+  currentTheme = theme;
+  localStorage.setItem('docudiff_theme', theme);
+
+  let effective = theme;
+  if (theme === 'auto') {
+    effective = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  const isLight = effective === 'light';
+  if (isLight) {
+    document.documentElement.classList.add('light-mode');
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.remove('light-mode');
+    document.documentElement.classList.add('dark');
+  }
+
+  // Update modal buttons
+  ['dark', 'light', 'auto'].forEach(t => {
+    const btn = document.getElementById(`themeOpt_${t}`);
+    if (btn) {
+      if (t === theme) {
+        btn.classList.add('border-indigo-500', 'bg-indigo-600/20');
+        btn.classList.remove('border-slate-700');
+      } else {
+        btn.classList.remove('border-indigo-500', 'bg-indigo-600/20');
+        btn.classList.add('border-slate-700');
+      }
+    }
+  });
+}
+
+// ── Language Engine ────────────────────────────────────────────────────────
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('docudiff_lang', lang);
+
+  document.getElementById('activeLangBadge').textContent = lang.toUpperCase();
+
+  // Highlight modal buttons
+  ['en', 'tr'].forEach(l => {
+    const btn = document.getElementById(`langOpt_${l}`);
+    if (btn) {
+      if (l === lang) {
+        btn.classList.add('border-indigo-500', 'bg-indigo-600/20', 'text-indigo-400');
+      } else {
+        btn.classList.remove('border-indigo-500', 'bg-indigo-600/20', 'text-indigo-400');
+      }
+    }
+  });
+
+  const dict = I18N[lang] || I18N.en;
+
+  // Translate all marked elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key]) {
+      if (key === 'heroHeading') {
+        el.innerHTML = dict[key];
+      } else {
+        el.textContent = dict[key];
+      }
+    }
+  });
+
+  // Dynamic placeholders
+  if (lang === 'tr') {
+    clauseIdEl.placeholder    = "örn. Madde_8.2";
+    clauseTitleEl.placeholder = "örn. Fesih Koşulları";
+    clauseTextEl.placeholder  = "Analiz edilecek sözleşme maddesini buraya yapıştırın…";
+  } else {
+    clauseIdEl.placeholder    = "e.g. Section_8.2";
+    clauseTitleEl.placeholder = "e.g. Termination Rights";
+    clauseTextEl.placeholder  = "Paste the legal clause text here to analyze for liabilities, indemnifications, or unfair terms…";
+  }
+
+  updateStanceBadge();
+}
+
+// ── Stance Engine ──────────────────────────────────────────────────────────
+function setStance(stance) {
+  currentStance = stance;
+  localStorage.setItem('docudiff_stance', stance);
+
+  ['balanced', 'buyer', 'vendor'].forEach(s => {
+    const btn = document.getElementById(`stanceOpt_${s}`);
+    if (btn) {
+      if (s === stance) {
+        btn.classList.add('border-indigo-500', 'bg-indigo-600/20');
+      } else {
+        btn.classList.remove('border-indigo-500', 'bg-indigo-600/20');
+      }
+    }
+  });
+
+  updateStanceBadge();
+}
+
+function updateStanceBadge() {
+  const badge = document.getElementById('stanceBadge');
+  if (!badge) return;
+  const isTr = currentLang === 'tr';
+  if (currentStance === 'buyer') {
+    badge.textContent = isTr ? "Müşteri / Alıcı Savunması" : "Buyer / Client Protection";
+  } else if (currentStance === 'vendor') {
+    badge.textContent = isTr ? "Satıcı / Sağlayıcı Koruması" : "Vendor / Supplier Protection";
+  } else {
+    badge.textContent = isTr ? "Dengeli İnceleme" : "Balanced Review";
+  }
+}
+
+// ── Font Size & AutoCopy ───────────────────────────────────────────────────
+function setFontSize(sizeClass) {
+  currentFontSize = sizeClass;
+  localStorage.setItem('docudiff_fontsize', sizeClass);
+  clauseTextEl.className = clauseTextEl.className.replace(/text-(xs|sm|base)/g, '') + ' ' + sizeClass;
+  const rev = document.getElementById('r_revision');
+  if (rev) rev.className = rev.className.replace(/text-(xs|sm|base)/g, '') + ' ' + sizeClass;
+}
+
+function setAutoCopy(checked) {
+  currentAutoCopy = checked;
+  localStorage.setItem('docudiff_autocopy', checked ? 'true' : 'false');
+}
+
+// ── Settings Modal Controls ────────────────────────────────────────────────
+function openSettings() {
+  settingsModal.classList.remove('hidden');
+}
+
+function closeSettings() {
+  settingsModal.classList.add('hidden');
+}
+
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) closeSettings();
+});
+
+// ── UI States ──────────────────────────────────────────────────────────────
+function showState(state) {
+  [emptyState, loadingState, errorState, resultsCard].forEach(el => el.classList.add('hidden'));
+  authBanner.classList.add('hidden');
+  if (state === 'empty')   emptyState.classList.remove('hidden');
+  if (state === 'loading') loadingState.classList.remove('hidden');
+  if (state === 'error')   errorState.classList.remove('hidden');
+  if (state === 'results') resultsCard.classList.remove('hidden');
+}
+
+// ── Sidebar Toggle ─────────────────────────────────────────────────────────
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebar       = document.getElementById('sidebar');
+if (sidebarToggle && sidebar) {
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+}
+
+// ── History Rendering ──────────────────────────────────────────────────────
+function renderHistory() {
+  if (!historyList) return;
+
+  [...historyList.children].forEach(c => { if (c !== histEmpty) c.remove(); });
+
+  if (HISTORY.length === 0) {
+    histEmpty.classList.remove('hidden');
+    if (histCount) histCount.textContent = '0';
+    return;
+  }
+  histEmpty.classList.add('hidden');
+  if (histCount) histCount.textContent = HISTORY.length;
+
+  HISTORY.forEach(a => {
+    const dot   = `dot-${(a.risk_level || 'low').toLowerCase()}`;
+    const score = a.risk_score || 0;
+    const item  = document.createElement('div');
+    item.className = 'hist-item rounded-xl px-3 py-2.5 cursor-pointer flex items-start gap-2.5 group border border-transparent';
+    item.dataset.id = a.id;
+    item.innerHTML = `
+      <span class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${dot}"></span>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-semibold truncate leading-snug">${escHtml(a.key_issue || a.clause_title || 'Review')}</p>
+        <p class="text-[10px] text-slate-400 mt-0.5">${escHtml(a.created_at || '')}</p>
+      </div>
+      <span class="text-[10px] font-mono font-bold text-slate-400 flex-shrink-0 mt-0.5">${score}</span>
+    `;
+    item.addEventListener('click', () => loadHistoryItem(a, item));
+    historyList.appendChild(item);
+  });
+}
+
+function loadHistoryItem(a, el) {
+  [...historyList.querySelectorAll('.hist-item')].forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+
+  clauseIdEl.value    = a.clause_id    || '';
+  clauseTitleEl.value = a.clause_title || '';
+  clauseTextEl.value  = a.clause_text  || '';
+
+  renderResults(a);
+  showState('results');
+}
+
+// ── Sample Loader ──────────────────────────────────────────────────────────
+document.getElementById('loadExample').addEventListener('click', () => {
+  clauseIdEl.value    = SAMPLE_CLAUSE.id;
+  clauseTitleEl.value = SAMPLE_CLAUSE.title;
+  clauseTextEl.value  = SAMPLE_CLAUSE.text;
+});
+
+// ── Retry ──────────────────────────────────────────────────────────────────
+document.getElementById('retryBtn').addEventListener('click', () => {
+  form.dispatchEvent(new Event('submit'));
+});
+
+// ── Error Formatter ────────────────────────────────────────────────────────
+function cleanError(data) {
+  const dict = I18N[currentLang] || I18N.en;
+  const raw = data.error || 'Unknown error occurred.';
+  if (raw.includes('503') || raw.includes('UNAVAILABLE') || raw.includes('high demand')) {
+    return currentLang === 'tr'
+      ? 'Gemini sunucuları şu an yoğun. Birkaç saniye sonra tekrar deneyin.'
+      : 'Gemini AI servers are currently experiencing peak demand. Please wait a moment and try again.';
+  }
+  if (raw.includes('API key') || raw.includes('401') || raw.includes('403')) {
+    return currentLang === 'tr'
+      ? 'API anahtarı hatası. Lütfen .env dosyasını kontrol edin.'
+      : 'API key authorization error. Please check your .env configuration.';
+  }
+  return raw;
+}
+
+// ── Analyze Form Submit ────────────────────────────────────────────────────
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = clauseTextEl.value.trim();
+  if (text.length < 20) {
+    clauseTextEl.style.borderColor = '#ef4444';
+    setTimeout(() => clauseTextEl.style.borderColor = '', 1600);
+    clauseTextEl.focus();
+    return;
+  }
+
+  const dict = I18N[currentLang] || I18N.en;
+  analyzeBtn.disabled = true;
+  analyzeBtn.innerHTML = `<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full spinner"></div> <span>${dict.analyzingTitle}</span>`;
+  showState('loading');
+
+  try {
+    const res = await fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clause_id:    clauseIdEl.value.trim()    || 'Clause_1',
+        clause_title: clauseTitleEl.value.trim() || 'Contract Clause',
+        clause_text:  text,
+        language:     currentLang,
+        stance:       currentStance,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      errorMsg.textContent = cleanError(data);
+      showState('error');
+      return;
+    }
+
+    if (data.saved && data.analysis_id) {
+      HISTORY.unshift({
+        id:                   data.analysis_id,
+        clause_id:            clauseIdEl.value.trim() || 'Clause_1',
+        clause_title:         clauseTitleEl.value.trim() || 'Contract Clause',
+        clause_text:          text,
+        risk_level:           data.risk_level,
+        risk_score:           data.risk_score,
+        risk_category:        data.risk_category,
+        key_issue:            data.key_issue,
+        plain_english_summary:data.plain_english_summary,
+        actionable_advice:    data.actionable_advice,
+        suggested_revision:   data.suggested_revision,
+        created_at:           dict.justNow,
+      });
+      renderHistory();
+    }
+
+    renderResults(data);
+    showState('results');
+
+    // Auto copy if enabled
+    if (currentAutoCopy && data.suggested_revision) {
+      navigator.clipboard.writeText(data.suggested_revision);
+    }
+
+    // Guest prompt
+    if (!IS_AUTH) {
+      setTimeout(() => authBanner.classList.remove('hidden'), 500);
+    }
+
+  } catch (err) {
+    errorMsg.textContent = (I18N[currentLang] || I18N.en).networkError;
+    showState('error');
+  } finally {
+    analyzeBtn.disabled = false;
+    const btnLabel = (I18N[currentLang] || I18N.en).analyzeBtn;
+    analyzeBtn.innerHTML = `
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.347a3.375 3.375 0 01-4.971 0l-.31-.34"/>
+      </svg>
+      <span>${btnLabel}</span>`;
+  }
+});
+
+// ── Render Results ─────────────────────────────────────────────────────────
+function renderResults(d) {
+  const level = (d.risk_level || 'LOW').toUpperCase();
+  const score = Math.min(100, Math.max(0, Number(d.risk_score) || 0));
+
+  const header = document.getElementById('riskHeader');
+  header.className = 'rounded-2xl border-2 p-5 transition-colors ';
+  header.classList.add(level === 'HIGH' ? 'risk-high' : level === 'MEDIUM' ? 'risk-medium' : 'risk-low');
+
+  const clauseIdLabel = document.getElementById('r_clauseId');
+  clauseIdLabel.textContent = d.clause_id || '';
+
+  const keyIssue = document.getElementById('r_keyIssue');
+  keyIssue.textContent = d.key_issue || '';
+
+  const riskBadge = document.getElementById('r_riskBadge');
+  riskBadge.textContent = level;
+  riskBadge.className = 'text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ' +
+    (level === 'HIGH' ? 'badge-high' : level === 'MEDIUM' ? 'badge-medium' : 'badge-low');
+
+  document.getElementById('r_categoryBadge').textContent = (d.risk_category || '').replace(/_/g, ' ');
+
+  const scoreColor = level === 'HIGH' ? '#dc2626' : level === 'MEDIUM' ? '#d97706' : '#16a34a';
+  document.getElementById('r_scoreLabel').textContent = score + ' / 100';
+  const bar = document.getElementById('r_scoreBar');
+  bar.style.background = scoreColor;
+  bar.style.width = '0%';
+  setTimeout(() => { bar.style.width = score + '%'; }, 80);
+
+  document.getElementById('r_plainEnglish').textContent = d.plain_english_summary || '';
+  document.getElementById('r_advice').textContent       = d.actionable_advice     || '';
+  document.getElementById('r_revision').textContent     = d.suggested_revision    || '';
+
+  // Copy button
+  const copyBtn = document.getElementById('copyBtn');
+  const copyBtnText = document.getElementById('copyBtnText');
+  const dict = I18N[currentLang] || I18N.en;
+
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(d.suggested_revision || '').then(() => {
+      copyBtnText.textContent = dict.copiedBtn;
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtnText.textContent = dict.copyBtn;
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  };
+}
+
+// ── PDF Drag & Drop ────────────────────────────────────────────────────────
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.add('dropzone-active');
+}
+
+function onDragLeave(e) {
+  document.getElementById('dropzone').classList.remove('dropzone-active');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('dropzone-active');
+  const file = e.dataTransfer.files[0];
+  if (file) handlePdf(file);
+}
+
+async function handlePdf(file) {
+  if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+    alert(currentLang === 'tr' ? 'Lütfen bir PDF dosyası seçin.' : 'Please select a valid PDF file.');
+    return;
+  }
+
+  const dropLoading = document.getElementById('dropLoading');
+  dropLoading.classList.remove('hidden');
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    const res  = await fetch('/upload-pdf', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      alert((currentLang === 'tr' ? 'Hata: ' : 'Error: ') + (data.error || 'Failed to read PDF.'));
+      return;
+    }
+
+    clauseTextEl.value = data.text;
+
+    document.getElementById('pdfName').textContent = `${file.name} · ${data.pages} ${currentLang === 'tr' ? 'sayfa' : 'pages'}`;
+    document.getElementById('pdfBar').classList.remove('hidden');
+
+    if (!clauseTitleEl.value) {
+      clauseTitleEl.value = file.name.replace('.pdf','').replace(/_/g,' ');
+    }
+
+  } catch (err) {
+    alert(currentLang === 'tr' ? 'PDF yüklenirken ağ hatası oluştu.' : 'Network error while uploading PDF.');
+  } finally {
+    dropLoading.classList.add('hidden');
+    document.getElementById('pdfInput').value = '';
+  }
+}
+
+function clearPdf() {
+  clauseTextEl.value = '';
+  document.getElementById('pdfBar').classList.add('hidden');
+  document.getElementById('pdfName').textContent = '';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function copyEmail() {
+  navigator.clipboard.writeText('emintalhacelik@gmail.com').then(() => {
+    const btn = document.getElementById('copyEmailBtn');
+    if (!btn) return;
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+    setTimeout(() => { btn.innerHTML = orig; }, 1800);
+  });
+}
+
+// ── Initialize App ─────────────────────────────────────────────────────────
+setTheme(currentTheme);
+setLang(currentLang);
+setStance(currentStance);
+setFontSize(currentFontSize);
+if (document.getElementById('fontSizeSelect')) {
+  document.getElementById('fontSizeSelect').value = currentFontSize;
+}
+if (document.getElementById('autoCopyCheck')) {
+  document.getElementById('autoCopyCheck').checked = currentAutoCopy;
+}
+renderHistory();
+</script>
+</body>
+</html>

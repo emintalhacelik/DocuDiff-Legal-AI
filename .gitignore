@@ -1,0 +1,23 @@
+# Environment & Secrets
+.env
+.env.local
+
+# Database & Uploads
+instance/
+*.db
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
