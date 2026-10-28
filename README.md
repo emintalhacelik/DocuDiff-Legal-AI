@@ -44,11 +44,17 @@
 
 ## ⚡ Quickstart Guide
 
+### Do Not Download App, Access With Web Service
+```bash
+You can click this link to access fast (https://docudiff-legal-ai.onrender.com/)
+```
+
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/your-username/DocuDiff-Legal-AI.git
 cd DocuDiff-Legal-AI
 ```
+
 
 ### 2. Create and Activate Virtual Environment
 ```bash
@@ -83,6 +89,8 @@ SECRET_KEY=generate_a_random_secret_for_sessions
 python app.py
 ```
 Visit **`http://127.0.0.1:5000`** in your browser.
+
+
 
 ---
 
